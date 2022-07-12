@@ -7,6 +7,7 @@ from django.db import DatabaseError
 from django.shortcuts import redirect
 from django.urls import reverse
 
+
 # Create your views here.
 class RegisterView(View):
     def get(self, request):
@@ -27,7 +28,7 @@ class RegisterView(View):
         sms_code = request.POST.get('sms_code')
         if not all([mobile, password, password2, sms_code]):
             return HttpResponseBadRequest('缺少重要的参数')
-        if not re.match(r'^1[3-9]\d{9}$',mobile):
+        if not re.match(r'^1[3-9]\d{9}$', mobile):
             return HttpResponseBadRequest('手机号输写错误')
         if not re.match(r'^[0-9A-Za-z]{8,20}', password):
             return HttpResponseBadRequest('请输入8-20位的数字与字母')
@@ -45,8 +46,15 @@ class RegisterView(View):
         except DatabaseError as e:
             logger.error(e)
             return HttpResponseBadRequest("注册失败")
-        return redirect(reverse('home:index'))
+
+        from django.contrib.auth import login
+        login(request, user)
+
+        response = redirect(reverse('home:index'))
+        response.set_cookie('is_login', True)
         # return HttpResponse('注册成功，重定向到首页')
+        response.set_cookie('username', user.username, max_age=7 * 24 * 60 * 60)
+        return response
 
 
 from libs.captcha.captcha import captcha
@@ -121,3 +129,64 @@ class SmsCodeView(View):
         redis_conn.setex('sms:%s' % mobile, 300, sms_code)
         CCP().send_template_sms(mobile, [sms_code, 5], 1)
         return JsonResponse({'code': RETCODE.OK, 'errmsg': '短信发送成功'})
+
+
+class LoginView(View):
+    def get(self, request):
+
+        return render(request, 'login.html')
+
+    def post(self, request):
+        '''
+        1. 接收参数
+        2. 参数的验证
+        3. 用户谁认证登陆
+        4。 状态的保持
+        5。 根据用户选择的是否记住登陆状态来进行判断
+        6。 为了首页显示我们需要设置一些cookie
+        7。 返回响应
+        :param request:
+        :return:
+        '''
+        mobile = request.POST.get('mobile')
+        password = request.POST.get('password')
+        remember = request.POST.get('remember')
+        if not all([mobile, password]):
+            return JsonResponse({'code': RETCODE.NECESSARYPARAMERR, 'errmsg': '必要的参数不全'})
+        if not re.match(r'^1[3-9]\d{9}$', mobile):
+            return HttpResponseBadRequest('手机号填写错误')
+        if not re.match(r'^[a-zA-Z0-9]{8,20}$', password):
+            return HttpResponseBadRequest("密码输入的格式不正确")
+        from django.contrib.auth import authenticate
+
+        user = authenticate(mobile=mobile, password=password)
+        if user is None:
+            return HttpResponseBadRequest('用户名不存在或者密码错误')
+        from django.contrib.auth import login
+        login(request, user)
+        response = redirect(reverse('home:index'))
+        if remember != 'on':
+            # 浏览器关闭之后
+            request.session.set_expiry(0)
+            response.set_cookie('is_login', True)
+            response.set_cookie('username', user.username, max_age=14 * 24 * 60 * 60)
+        else:
+            # 默认保存两周
+            request.session.set_expiry(None)
+            response.set_cookie('is_login', True, max_age=14 * 24 * 60 * 60)
+            response.set_cookie('username', user.username, max_age=14 * 24 * 60 * 60)
+        return response
+
+
+from django.contrib.auth import logout
+
+
+class LogoutView(View):
+    def get(self, request):
+        # 1. session 数据的清除
+        logout(request)
+        # 2. 删除部分cookie数据
+        response = redirect(reverse('home:index'))
+        response.delete_cookie('is_login')
+        # 3. 跳转到首页
+        return response
