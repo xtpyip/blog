@@ -43,6 +43,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.csrfResponseMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -76,8 +77,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',  # 数据库引擎
         'HOST': '127.0.0.1',  # 数据库主机
         'PORT': 3306,  # 数据库端口
-        'USER': 'pyip',  # 数据库用户名
-        'PASSWORD': '1234',  # 数据库用户密码
+        'USER': 'root',  # 数据库用户名
+        'PASSWORD': '10086',  # 数据库用户密码
         'NAME': 'blog'  # 数据库名字
     },
 }
@@ -123,7 +124,7 @@ STATICFILES_DIRS = [
 
 CACHES = {
     "default": { # 默认
-        "BACKEND": "django＿redis.cache.RedisCache",
+        "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -180,3 +181,4 @@ LOGGING = {
         },
     }
 }
+AUTH_USER_MODEL = 'users.User'
