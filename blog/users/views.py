@@ -164,7 +164,12 @@ class LoginView(View):
             return HttpResponseBadRequest('用户名不存在或者密码错误')
         from django.contrib.auth import login
         login(request, user)
-        response = redirect(reverse('home:index'))
+        next_page = request.GET.get('next')
+        if next_page:
+            response = redirect(next_page)
+        else:
+            response = redirect(reverse('home:index'))
+
         if remember != 'on':
             # 浏览器关闭之后
             request.session.set_expiry(0)
@@ -239,3 +244,96 @@ class ForgetPasswordView(View):
             user.save()
         response = redirect(reverse('users:login'))
         return response
+
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+class UserCenterView(LoginRequiredMixin, View):
+    def get(self, request):
+        user = request.user
+        context = {
+            'username': user.username,
+            'mobile': user.mobile,
+            'avatar': user.avatar.url if user.avatar else None,
+            'user_desc': user.user_desc
+        }
+
+        return render(request, 'center.html', context)
+    def post(self,request):
+        '''
+        1。接收参数
+        2。将参数保存
+        3。更新cookie中的username信息
+        4》刷新当前页面（重定向操作）
+        5》返回响应
+        :param request:
+        :return:
+        '''
+        user = request.user
+        username=request.POST.get('username',user.username)
+        user_desc = request.POST.get('desc',user.user_desc)
+        avatar = request.FILES.get('avatar')
+        try:
+            user.username = username
+            user.user_desc = user_desc
+            if avatar:
+                user.avatar = avatar
+            user.save()
+        except Exception as e:
+            logger.error(e)
+            return HttpResponseBadRequest('修改失败，请稍后再试')
+        response = redirect(reverse('users:center'))
+        response.set_cookie('username',user.username,max_age=14*24*60*60)
+
+        return response
+from home.models import ArticleCategory,Article
+class WriteBlogView(LoginRequiredMixin,View):
+    def get(self,request):
+        # 查询所有分类模型
+        categories = ArticleCategory.objects.all()
+        context = {
+            'categories': categories
+        }
+
+        return render(request,'write_blog.html',context=context)
+    def post(self,request):
+        '''
+        1》接收数据
+        2》验证数据
+        3》数据入库
+        4》跳转到指定页面（暂定为首页）
+        :param request:
+        :return:
+        '''
+        avatar = request.FILES.get('avatar')
+        title = request.POST.get('title')
+        category_id = request.POST.get('category')
+        tags = request.POST.get('tags')
+        summary = request.POST.get('sumary')
+        content = request.POST.get('content')
+        user = request.user
+        if not all([avatar,title,category_id,tags,summary,content]):
+            return HttpResponseBadRequest('参数不全')
+        try:
+            category = ArticleCategory.objects.get(id=category_id)
+        except ArticleCategory.DoesNotExist:
+            return HttpResponseBadRequest('没有此分类')
+        try:
+            article = Article.objects.create(
+                author=user,
+                avatar=avatar,
+                title=title,
+                category=category,
+                tags=tags,
+                sumary=summary,
+                content=content
+            )
+        except Exception as e:
+            logger.error(e)
+            return HttpResponseBadRequest("发布失败，请稍后再试")
+        return redirect(reverse('home:index'))
+
+
+
+

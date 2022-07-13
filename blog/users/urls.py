@@ -1,5 +1,6 @@
 from django.urls import path
-from users.views import RegisterView, ImageCode, SmsCodeView, LoginView, LogoutView,ForgetPasswordView
+from users.views import RegisterView, ImageCode, SmsCodeView, LoginView, LogoutView,\
+    ForgetPasswordView,UserCenterView,WriteBlogView
 
 urlpatterns = [
     path('register', RegisterView.as_view(), name='register'),
@@ -12,5 +13,9 @@ urlpatterns = [
     # 退出登陆
     path('logout/', LogoutView.as_view(), name='logout'),
     # 忘记密码
-    path('forgetpassword/',ForgetPasswordView.as_view(),name='forgetPassword')
+    path('forgetpassword/',ForgetPasswordView.as_view(),name='forgetPassword'),
+    # 个人中心
+    path('center/',UserCenterView.as_view(),name='center'),
+    # 写博客的路由
+    path('writeblog/',WriteBlogView.as_view(),name='writeBlog')
 ]
