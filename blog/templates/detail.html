@@ -56,7 +56,7 @@
 
             <!-- 如果用户已经登录，则显示用户名下拉框 -->
             <li class="nav-item dropdown" v-if="is_login">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @click="show_menu_click">admin</a>
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @click="show_menu_click">[[username]]</a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown" style="display: block" v-show="show_menu">
                     <a class="dropdown-item" href="{% url 'users:writeBlog' %}">写文章</a>
                     <a class="dropdown-item" href='{% url 'users:center' %}'>个人信息</a>
@@ -92,6 +92,8 @@
             <br>
             <div>
                 <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" value="{{ article.id }}">
                 <div class="form-group"><label for="body"><strong>我也要发言：</strong></label>
                     <div>
 
@@ -108,51 +110,22 @@
             </div>
             <br>
             <!-- 显示评论 -->
-            <h4>共有5条评论</h4>
+            <h4>共有{{ total_count }}条评论</h4>
             <div class="row">
+                {% for comment in comments  %}
                 <div class="col-12" >
                             <hr><p><strong style="color: pink"></strong></p>
                             <div>
-                                <div><span><strong>老王</strong></span>&nbsp;<span style="color: gray">2019-05-18 14:54</span></div>
+                                <div><span><strong>{{ comment.user.username }}</strong></span>&nbsp;<span style="color: gray">{{ comment.created|date:'Y-m-d H:i' }}</span></div>
                                 <br>
-                                <p>学习了</p>
+                                <p>{{ comment.content|safe }}</p>
                             </div>
                 </div>
-                <div class="col-12">
-                    <hr><p><strong style="color: pink"></strong></p>
-                    <div>
-                        <div><span><strong>老王</strong></span>&nbsp;<span style="color: gray">2019-05-18 14:54</span></div>
-                        <br>
-                        <p>学习了</p>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <hr><p><strong style="color: pink"></strong></p>
-                    <div>
-                        <div><span><strong>老王</strong></span>&nbsp;<span style="color: gray">2019-05-18 14:54</span></div>
-                        <br>
-                        <p>学习了</p>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <hr><p><strong style="color: pink"></strong></p>
-                    <div>
-                        <div><span><strong>老王</strong></span>&nbsp;<span style="color: gray">2019-05-18 14:54</span></div>
-                        <br>
-                        <p>学习了</p>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <hr><p><strong style="color: pink"></strong></p>
-                    <div>
-                        <div><span><strong>老王</strong></span>&nbsp;<span style="color: gray">2019-05-18 14:54</span></div>
-                        <br>
-                        <p>学习了</p>
-                    </div>
-                </div>
+               {% endfor %}
                 <div class="pagenation" style="text-align: center">
                     <div id="pagination" class="page"></div>
                 </div>
+
             </div> 
 
         </div>
@@ -161,11 +134,9 @@
             <div class="sidebar__inner">
                     <h4><strong>推荐</strong></h4>
                     <hr>
-                    <a href="#" style="color: black">如何更好的学习Django呢？</a><br>
-                    <a href="#" style="color: black">如何更好的学习Django呢？</a><br>
-                    <a href="#" style="color: black">如何更好的学习Django呢？</a><br>
-                    <a href="#" style="color: black">如何更好的学习Django呢？</a><br>
-                    <a href="#" style="color: black">如何更好的学习Django呢？</a><br>
+                    {%  for hot in hot_articles %}
+                        <a href="{% url 'home:detail' %}?id={{ hot.id }}" style="color: black">{{ hot.title }}</a><br>
+                    {% endfor %}
             </div>
         </div>
     </div>
@@ -191,11 +162,11 @@
 <script type="text/javascript">
     $(function () {
         $('#pagination').pagination({
-            currentPage: 15,
-            totalPage: 30,
+            currentPage: {{page_num}},
+            totalPage: {{total_page}},
             callback:function (current) {
 
-                location.href = '/';
+                location.href = '/detail/?id={{ article.id }}&page_size={{ page_size }}&page_num='+{{ page_num }};
             }
         })
     });

@@ -260,7 +260,8 @@ class UserCenterView(LoginRequiredMixin, View):
         }
 
         return render(request, 'center.html', context)
-    def post(self,request):
+
+    def post(self, request):
         '''
         1。接收参数
         2。将参数保存
@@ -271,8 +272,8 @@ class UserCenterView(LoginRequiredMixin, View):
         :return:
         '''
         user = request.user
-        username=request.POST.get('username',user.username)
-        user_desc = request.POST.get('desc',user.user_desc)
+        username = request.POST.get('username', user.username)
+        user_desc = request.POST.get('desc', user.user_desc)
         avatar = request.FILES.get('avatar')
         try:
             user.username = username
@@ -284,20 +285,25 @@ class UserCenterView(LoginRequiredMixin, View):
             logger.error(e)
             return HttpResponseBadRequest('修改失败，请稍后再试')
         response = redirect(reverse('users:center'))
-        response.set_cookie('username',user.username,max_age=14*24*60*60)
+        response.set_cookie('username', user.username, max_age=14 * 24 * 60 * 60)
 
         return response
-from home.models import ArticleCategory,Article
-class WriteBlogView(LoginRequiredMixin,View):
-    def get(self,request):
+
+
+from home.models import ArticleCategory, Article
+
+
+class WriteBlogView(LoginRequiredMixin, View):
+    def get(self, request):
         # 查询所有分类模型
         categories = ArticleCategory.objects.all()
         context = {
             'categories': categories
         }
 
-        return render(request,'write_blog.html',context=context)
-    def post(self,request):
+        return render(request, 'write_blog.html', context=context)
+
+    def post(self, request):
         '''
         1》接收数据
         2》验证数据
@@ -313,7 +319,7 @@ class WriteBlogView(LoginRequiredMixin,View):
         summary = request.POST.get('sumary')
         content = request.POST.get('content')
         user = request.user
-        if not all([avatar,title,category_id,tags,summary,content]):
+        if not all([avatar, title, category_id, tags, summary, content]):
             return HttpResponseBadRequest('参数不全')
         try:
             category = ArticleCategory.objects.get(id=category_id)
@@ -333,7 +339,3 @@ class WriteBlogView(LoginRequiredMixin,View):
             logger.error(e)
             return HttpResponseBadRequest("发布失败，请稍后再试")
         return redirect(reverse('home:index'))
-
-
-
-
