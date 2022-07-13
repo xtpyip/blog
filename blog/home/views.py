@@ -36,7 +36,7 @@ class IndexView(View):
         paginator = Paginator(articles, per_page=page_size)
 
         try:
-            page_article = paginator.page(page_num)
+            page_articles = paginator.page(page_num)
         except EmptyPage:
             return HttpResponseNotFound('empty page')
         total_page = paginator.num_pages
@@ -44,7 +44,7 @@ class IndexView(View):
         context = {
             'categories': categories,
             'category': category,
-            'articles': page_article,
+            'articles': page_articles,
             'page_size': page_size,
             'total_page': total_page,
             'page_num': page_num

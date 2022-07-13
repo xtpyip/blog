@@ -166,7 +166,7 @@
             totalPage: {{total_page}},
             callback:function (current) {
 
-                location.href = '/detail/?id={{ article.id }}&page_size={{ page_size }}&page_num='+{{ page_num }};
+                location.href = '/detail/?id={{ article.id }}&page_size={{ page_size }}&page_num='+current;
             }
         })
     });

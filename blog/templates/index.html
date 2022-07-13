@@ -134,9 +134,10 @@
     $(function () {
         $('#pagination').pagination({
             currentPage: {{page_num}},
-            totalPage: {{page_size}},
+            totalPage: {{total_page}},
             callback:function (current) {
-                location.href = '/?cat_id={{ category.id }}&page_size={{ page_size }}&page_num={{ page_num }}';
+                {#?cat_id=3&page_size=10&page_num=2#}
+                location.href = '/?cat_id={{ category.id }}&page_size={{ page_size }}&page_num='+current;
             }
         })
     });
